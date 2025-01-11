@@ -142,18 +142,19 @@ int test3()
 }
 
 
+#include "int-range.hpp"
+
 int random_tests_ab()
 {
-    for(int i=1; i<= 300; ++i)
-    {
-        if(compare_to_expected_result(
-                    random_ab_string(), random_ab_pattern())
-                == TEST_FAILURE)
-        {
-            return TEST_FAILURE;
-        }
-    }
-    return TEST_PASSED;
+    IntRange r({0, 300});
+    bool all_passed = std::all_of(
+            r.begin(), r.end(),
+            [](int){
+                return compare_to_expected_result(
+                        random_ab_string(), random_ab_pattern())
+                    ==TEST_PASSED;
+            });
+    return all_passed? TEST_PASSED : TEST_FAILURE;
 }
 
 /* Failures:
