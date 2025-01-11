@@ -1,5 +1,6 @@
 #include "regex-matching-engine.hpp"
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <random>
 #include <ranges>
@@ -8,6 +9,8 @@
 
 #define TEST_PASSED 0
 #define TEST_FAILURE -1
+
+using namespace std::chrono_literals; // for constructs like 1ms or 2us
 
 
 std::minstd_rand rng(std::random_device{}());
@@ -75,11 +78,28 @@ static bool std_match(const char *str, const char *pattern)
 }
 
 
+template<typename Duration=std::chrono::nanoseconds>
 static int compare_to_expected_result(
-        const char *str, const char *pattern)
+        const char *str, const char *pattern,
+        const Duration &max_duration=std::chrono::nanoseconds::zero())
 {
+    auto start_time = std::chrono::steady_clock::now();
     Solution s;
     bool solution_result = s.isMatch(str, pattern);
+    auto end_time = std::chrono::steady_clock::now();
+
+    if(
+            (max_duration.count() > 0) &&
+            (end_time - start_time > max_duration))
+    {
+        auto duration_in_microseconds =
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                    end_time-start_time);
+        std::cerr << "Warning: "
+            << pattern << " against " << str
+            << ": took " << duration_in_microseconds << "\n";
+    }
+
     bool std_result = std_match(str, pattern);
     if(solution_result == std_result)
     {
@@ -96,51 +116,31 @@ static int compare_to_expected_result(
 }
 
 
+template<typename Duration>
 static int compare_to_expected_result(
-        const std::string &str, const std::string &pattern)
+        const std::string &str, const std::string &pattern,
+        const Duration &max_duration)
 {
-    return compare_to_expected_result(str.c_str(), pattern.c_str());
-}
-
-
-static int compare_to_expected_result(
-        const char *str, const char *pattern, bool should_match)
-{
-    Solution s;
-    bool solution_result = s.isMatch(str, pattern);
-    bool std_result = std_match(str, pattern);
-    if(solution_result == std_result &&
-            solution_result == should_match)
-    {
-        return TEST_PASSED;
-    }
-    else
-    {
-        std::cerr << str << " against " << pattern
-            << ": solution: " << solution_result
-            << ", std: " << std_result << ", "
-            << ", expected: " << should_match << '\n';
-
-        return TEST_FAILURE;
-    }
+    return compare_to_expected_result(
+            str.c_str(), pattern.c_str(), max_duration);
 }
 
 
 int test1()
 {
-    return compare_to_expected_result("aaa", ".*", true);
+    return compare_to_expected_result("aaa", ".*");
 }
 
 
 int test2()
 {
-    return compare_to_expected_result("aaa", "a*", true);
+    return compare_to_expected_result("aaa", "a*");
 }
 
 
 int test3()
 {
-    return compare_to_expected_result("aaa", "ab*", false);
+    return compare_to_expected_result("aaa", "ab*");
 }
 
 
@@ -151,7 +151,8 @@ int random_tests_ab()
             [](int)
             {
                 return compare_to_expected_result(
-                        random_ab_string(), random_ab_pattern())
+                        random_ab_string(), random_ab_pattern(),
+                        1ms) // defined thanks to std::chrono_literals
                     == TEST_PASSED;
             });
     return all_passed? TEST_PASSED : TEST_FAILURE;
