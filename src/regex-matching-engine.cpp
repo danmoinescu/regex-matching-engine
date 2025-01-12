@@ -67,6 +67,12 @@ bool Solution::isMatch(const char *s, PatternIterator pCrtPatternItem, int depth
             std::ostream_iterator<PatternItem>(std::cout, " "));
     std::cout << ")\n";
 #endif
+    auto pair_id = mkid(s, pCrtPatternItem);
+    auto cache_iterator = cache.find(pair_id);
+    if(cache_iterator != cache.end())
+    {
+        return cache_iterator->second;
+    }
     bool retval = isMatchInner(s, pCrtPatternItem, depth);
 #ifdef DEBUG
     std::cout << std::right << std::setw(2) << depth << std::left << std::setw(0)
@@ -77,6 +83,7 @@ bool Solution::isMatch(const char *s, PatternIterator pCrtPatternItem, int depth
             std::ostream_iterator<PatternItem>(std::cout, " "));
     std::cout << "): " << retval << "\n";
 #endif
+    cache.emplace(pair_id, retval);
     return retval;
 }
 
@@ -138,6 +145,8 @@ bool Solution::isMatchInner(const char *s, PatternIterator pCrtPatternItem, int 
 bool Solution::isMatch(const char *s, const char *p)
 {
     parsePattern(p);
+    orig_str = s;
     s_len = strlen(s);
-    return isMatch(s, parsedPattern.cbegin(), 1);
+    pFirstPatternItem = parsedPattern.cbegin();
+    return isMatch(s, pFirstPatternItem, 1);
 }
