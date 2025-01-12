@@ -2,6 +2,7 @@
 #include <algorithm>
 #ifdef DEBUG
 #include <iterator>
+#include <iomanip>
 #include <iostream>
 
 
@@ -55,14 +56,32 @@ void Solution::parsePattern(const char *p)
 }
 
 
-bool Solution::isMatch(const char *s, PatternIterator pCrtPatternItem)
+bool Solution::isMatch(const char *s, PatternIterator pCrtPatternItem, int depth)
 {
 #ifdef DEBUG
-    std::cout << "isMatch(" << s << ", ";
+    std::cout << std::right << std::setw(2) << depth << std::left << std::setw(0)
+        << ": call isMatch("
+        << std::right << std::setw(s_len) << s << std::left << std::setw(0)
+        << ", ";
     std::copy(pCrtPatternItem, parsedPattern.cend(),
             std::ostream_iterator<PatternItem>(std::cout, " "));
     std::cout << ")\n";
 #endif
+    bool retval = isMatchInner(s, pCrtPatternItem, depth);
+#ifdef DEBUG
+    std::cout << std::right << std::setw(2) << depth << std::left << std::setw(0)
+        << ":  ret isMatch("
+        << std::right << std::setw(s_len) << s << std::left << std::setw(0)
+        << ", ";
+    std::copy(pCrtPatternItem, parsedPattern.cend(),
+            std::ostream_iterator<PatternItem>(std::cout, " "));
+    std::cout << "): " << retval << "\n";
+#endif
+    return retval;
+}
+
+bool Solution::isMatchInner(const char *s, PatternIterator pCrtPatternItem, int depth)
+{
     if(!s[0]) // the string is exhausted
     {
         /* We're happy if all remaining pattern items (if any)
@@ -82,7 +101,7 @@ bool Solution::isMatch(const char *s, PatternIterator pCrtPatternItem)
         if(pCrtPatternItem->matches(s[0]))
         {
             //advance
-            return isMatch(s+1, pCrtPatternItem+1);
+            return isMatch(s+1, pCrtPatternItem+1, depth+1);
         }
         else // no match
         {
@@ -93,7 +112,7 @@ bool Solution::isMatch(const char *s, PatternIterator pCrtPatternItem)
     /* First, ignore it (assume it corresponds to the empty string)
        and try to match the subsequent items
     */
-    if(isMatch(s, pCrtPatternItem+1))
+    if(isMatch(s, pCrtPatternItem+1, depth+1))
     {
         return true;
     }
@@ -104,7 +123,7 @@ bool Solution::isMatch(const char *s, PatternIterator pCrtPatternItem)
     for(const char *remainder = s; *remainder; remainder++)
     {
         if(pCrtPatternItem->matches(remainder[0])
-                && isMatch(remainder+1, pCrtPatternItem+1))
+                && isMatch(remainder+1, pCrtPatternItem+1, depth+1))
         {
             return true;
         }
@@ -116,5 +135,6 @@ bool Solution::isMatch(const char *s, PatternIterator pCrtPatternItem)
 bool Solution::isMatch(const char *s, const char *p)
 {
     parsePattern(p);
-    return isMatch(s, parsedPattern.cbegin());
+    s_len = strlen(s);
+    return isMatch(s, parsedPattern.cbegin(), 1);
 }

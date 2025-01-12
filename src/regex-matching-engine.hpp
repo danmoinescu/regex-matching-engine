@@ -27,6 +27,7 @@ class Solution
 {
     private:
         std::vector<PatternItem> parsedPattern;
+        int s_len;
 
     public:
         bool isMatch(const char *s, const char *pattern);
@@ -37,5 +38,6 @@ class Solution
 
     private:
         void parsePattern(const char *p);
-        bool isMatch(const char *s, PatternIterator pCrtPatternItem);
+        bool isMatch(const char *s, PatternIterator pCrtPatternItem, int depth);
+        bool isMatchInner(const char *s, PatternIterator pCrtPatternItem, int depth);
 };
