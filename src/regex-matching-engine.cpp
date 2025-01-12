@@ -122,8 +122,11 @@ bool Solution::isMatchInner(const char *s, PatternIterator pCrtPatternItem, int 
     */
     for(const char *remainder = s; *remainder; remainder++)
     {
-        if(pCrtPatternItem->matches(remainder[0])
-                && isMatch(remainder+1, pCrtPatternItem+1, depth+1))
+        if(!pCrtPatternItem->matches(remainder[0]))
+        {
+            break;
+        }
+        if(isMatch(remainder+1, pCrtPatternItem+1, depth+1))
         {
             return true;
         }
