@@ -89,33 +89,41 @@ bool Solution::isMatch(const char *s, PatternIterator pCrtPatternItem, int depth
 
 bool Solution::isMatchInner(const char *s, PatternIterator pCrtPatternItem, int depth)
 {
-    if(!s[0]) // the string is exhausted
+    while(true)
     {
-        /* We're happy if all remaining pattern items (if any)
-           are starred (since they can match the empty string).
-        */
-        return std::all_of(
-                pCrtPatternItem, parsedPattern.cend(),
-                [](const PatternItem &item) { return item.hasStar; } );
-    }
-    if(pCrtPatternItem == parsedPattern.cend())
-    {
-        // the pattern is exhausted before the string
-        return false;
-    }
-    if(! pCrtPatternItem->hasStar)
-    {
-        if(pCrtPatternItem->matches(s[0]))
+        if(!s[0]) // the string is exhausted
         {
-            //advance
-            return isMatch(s+1, pCrtPatternItem+1, depth+1);
+            /* We're happy if all remaining pattern items (if any)
+               are starred (since they can match the empty string).
+            */
+            return std::all_of(
+                    pCrtPatternItem, parsedPattern.cend(),
+                    [](const PatternItem &item) { return item.hasStar; } );
         }
-        else // no match
+        if(pCrtPatternItem == parsedPattern.cend())
         {
+            // the pattern is exhausted before the string
             return false;
         }
+        if(pCrtPatternItem->hasStar)
+        {
+            break;
+        }
+        else
+        {
+            if(pCrtPatternItem->matches(s[0]))
+            {
+                //advance
+                s++;
+                pCrtPatternItem++;
+            }
+            else // no match
+            {
+                return false;
+            }
+        }
     }
-    // Now we have a star pattern
+    // If we got here, we have a star pattern
     /* First, ignore it (assume it corresponds to the empty string)
        and try to match the subsequent items
     */
